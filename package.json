@@ -1,0 +1,26 @@
+{
+  "name": "coinapp",
+  "version": "1.0.0",
+  "description": "Best Coin App Ever",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app"
+  },
+  "dependencies": {
+    "angular2-jwt": "^0.2.3",
+    "bcryptjs": "*",
+    "bluebird": "^3.5.1",
+    "body-parser": "*",
+    "cors": "*",
+    "express": "*",
+    "json": "^9.0.6",
+    "jsonwebtoken": "*",
+    "mongoose": "*",
+    "mysql": "^2.15.0",
+    "passport": "*",
+    "passport-jwt": "^3.0.0"
+  },
+  "author": "",
+  "license": "ISC"
+}

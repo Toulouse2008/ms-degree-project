@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>Stock Info App</title>
+  <base href="/">
+
+  <!-- the following javascript codes make the charts  -->
+  <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+  <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+  <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+  <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>
+
+          var chartData1 = [];
+          var data = [];
+          var stock = null;
+
+          function generateChartData(data) {
+              chartData1 = JSON.parse(data);
+
+              for (var i = 0; i < 200; i++){
+                  chartData1.push({
+                      date: new Date(chartData1[i]['date']),
+                      value: chartData1[i]['close'],
+                      volume: chartData1[i]['volume']
+                  });
+              }
+          }
+
+          function createStockChart() {
+              //document.getElementById('chart').innerHTML = "";
+              var chart = new AmCharts.AmStockChart();
+
+              // create data sets first
+              var dataSet1 = new AmCharts.DataSet();
+              dataSet1.title = "first data set";
+              dataSet1.fieldMappings = [{
+                  fromField: "value",
+                  toField: "value"
+              }, {
+                  fromField: "volume",
+                  toField: "volume"
+              }];
+              dataSet1.dataProvider = chartData1;
+              dataSet1.categoryField = "date";
+              // set data sets to the chart
+              chart.dataSets = [dataSet1];
+
+              // first stock panel
+              var stockPanel1 = new AmCharts.StockPanel();
+              stockPanel1.showCategoryAxis = false;
+              stockPanel1.title = "Value";
+              stockPanel1.percentHeight = 70;
+
+              // graph of first stock panel
+              var graph1 = new AmCharts.StockGraph();
+              graph1.valueField = "value";
+              graph1.comparable = true;
+              graph1.compareField = "value";
+              graph1.bullet = "round";
+              graph1.bulletBorderColor = "#FFFFFF";
+              graph1.bulletBorderAlpha = 1;
+              graph1.balloonText = "[[title]]:<b>[[value]]</b>";
+              graph1.compareGraphBalloonText = "[[title]]:<b>[[value]]</b>";
+              graph1.compareGraphBullet = "round";
+              graph1.compareGraphBulletBorderColor = "#FFFFFF";
+              graph1.compareGraphBulletBorderAlpha = 1;
+              stockPanel1.addStockGraph(graph1);
+
+              // create stock legend
+              var stockLegend1 = new AmCharts.StockLegend();
+              stockLegend1.periodValueTextComparing = "[[percents.value.close]]%";
+              stockLegend1.periodValueTextRegular = "[[value.close]]";
+              stockPanel1.stockLegend = stockLegend1;
+
+
+              // second stock panel
+              var stockPanel2 = new AmCharts.StockPanel();
+              stockPanel2.title = "Volume";
+              stockPanel2.percentHeight = 30;
+              var graph2 = new AmCharts.StockGraph();
+              graph2.valueField = "volume";
+              graph2.type = "column";
+              graph2.showBalloon = false;
+              graph2.fillAlphas = 1;
+              stockPanel2.addStockGraph(graph2);
+
+              var stockLegend2 = new AmCharts.StockLegend();
+              stockLegend2.periodValueTextRegular = "[[value.close]]";
+              stockPanel2.stockLegend = stockLegend2;
+
+              // set panels to the chart
+              chart.panels = [stockPanel1, stockPanel2];
+
+
+              // OTHER SETTINGS ////////////////////////////////////
+              var sbsettings = new AmCharts.ChartScrollbarSettings();
+              sbsettings.graph = graph1;
+              sbsettings.updateOnReleaseOnly = false;
+              chart.chartScrollbarSettings = sbsettings;
+
+              // CURSOR
+              var cursorSettings = new AmCharts.ChartCursorSettings();
+              cursorSettings.valueBalloonsEnabled = true;
+              chart.chartCursorSettings = cursorSettings;
+
+
+              // PERIOD SELECTOR ///////////////////////////////////
+              var periodSelector = new AmCharts.PeriodSelector();
+              periodSelector.position = "left";
+              periodSelector.periods = [{
+                  period: "DD",
+                  count: 21,
+                  label: "21 days"
+              }, {
+                  period: "MM",
+                  selected: true,
+                  count: 3,
+                  label: "3 months"
+              },{
+                  period: "MM",
+                  count: 6,
+                  label: "6 months"
+              },{
+                  period: "YYYY",
+                  count: 1,
+                  label: "1 year"
+              }, {
+                  period: "MAX",
+                  count:18,
+                  label: "MAX"
+              }];
+              chart.periodSelector = periodSelector;
+
+
+              // DATA SET SELECTOR
+              var dataSetSelector = new AmCharts.DataSetSelector();
+              dataSetSelector.position = "left";
+              chart.dataSetSelector = dataSetSelector;
+
+              chart.write('chartdiv');
+          }
+
+
+          $.get("http://localhost:3000/data", function(data){
+              //data = JSON.parse(data);
+              //alert(data.length);
+              //$('.result').html(data);
+          })
+          .success(function(data){
+              //console.log('In success');
+              AmCharts.ready(function(){
+                  generateChartData(data);
+                  createStockChart();
+              });
+          })
+          .error(function(){console.log('errror');})
+          .complete(function(){
+              console.log("DONE!");
+          });
+
+          function refresh(){
+              stock = document.getElementById("stockSymbol").value;
+              var xhr = new XMLHttpRequest();
+              var url = "http://localhost:3000/data?symbol=" + stock;
+              xhr.open("GET", url, true);
+              xhr.onreadystatechange = function(){
+                  console.log(xhr.readyState);
+                  if(xhr.readyState == 4 && xhr.status == 200){
+                    //   data = JSON.parse(xhr.responseText);
+                    //   console.log(data);
+                    data = xhr.responseText;
+
+
+                          generateChartData(data);
+                          createStockChart();
+                        //   alert(data.length);
+                        //   console.log(data);
+
+                  }
+              };
+              xhr.send();
+          }
+
+            //   stock = document.getElementById("stockSymbol").value;
+            //   $.get("http://localhost:3000/data?symbol=" + stock, function(data){
+            //       data = JSON.parse(data);
+            //       alert(data.length);
+            //       $('.result').html(data);
+            //   })
+            //   .success(function(data){
+            //       //console.log('In success');
+            //       AmCharts.ready(function(){
+            //           generateChartData(data);
+            //           createStockChart();
+            //       });
+            //   })
+            //   .error(function(){console.log('errror');})
+            //   .complete(function(){
+            //       console.log("DONE!");
+            //   });
+      </script>
+</head>
+<body>
+    <div class="col-md-5">
+        <!-- Stock name
+        <app-stock></app-historical>
+        <app-footer></app-footer>
+        -->
+        Stock Symbol:<input type="text" name="stockSymbol" id="stockSymbol" value="">
+        <input type="button" value="Submit" id="btn" onclick="refresh()">
+    </div>
+  <app-root></app-root>
+  <div class="result">
+
+  </div>
+
+</body>
+</html>
